@@ -1,4 +1,3 @@
-
 //format utility
 if (!String.prototype.format) {
   String.prototype.format = function() {
@@ -12,14 +11,72 @@ if (!String.prototype.format) {
   };
 }
 
+//contains utility
+var contains = function(needle) {
+    // Per spec, the way to identify NaN is that it is not equal to itself
+    var findNaN = needle !== needle;
+    var indexOf;
+
+    if(!findNaN && typeof Array.prototype.indexOf === 'function') {
+        indexOf = Array.prototype.indexOf;
+    } else {
+        indexOf = function(needle) {
+            var i = -1, index = -1;
+
+            for(i = 0; i < this.length; i++) {
+                var item = this[i];
+
+                if((findNaN && item !== item) || item === needle) {
+                    index = i;
+                    break;
+                }
+            }
+
+            return index;
+        };
+    }
+
+    return indexOf.call(this, needle) > -1;
+};
+
+//Array move utility
+Array.prototype.move = function (old_index, new_index) {
+    if (new_index >= this.length) {
+        var k = new_index - this.length;
+        while ((k--) + 1) {
+            this.push(undefined);
+        }
+    }
+    this.splice(new_index, 0, this.splice(old_index, 1)[0]);
+    return this; // for testing purposes
+};
+
+function formatTime(time){
+	var isAM = Boolean(1);
+	var suffix;
+	var split_time = time.split(":");
+	var hour = parseInt(split_time[0]);
+	if (hour >= 12){
+		isAM = Boolean(0)
+	}
+	hour = ((hour + 11) % 12 + 1);
+	isAM ? suffix = "AM" : suffix = "PM" ;
+	return "{0}:{1} {2}".format(hour.toString(), split_time[1], suffix)
+}
 
 var flight_counter = 1;
 var hotel_counter = 1;
 var groundT_counter = 1;
 var rental_counter = 1;
 
+/*
+ * HTML form elements
+ */
+
+
 ////////////////////////////////////
 // flight
+////////////////////////////////////
 
 function addFlight(divName){
 
@@ -28,9 +85,11 @@ function addFlight(divName){
   document.getElementById(divName).appendChild(newdiv);
   flight_counter++;
   
+  focusFirstInput(newdiv);
+  
 }
 
-function getFlightHTML(){	
+function getFlightHTML(){
 	var flight_str = `<div id="div_flight_{0}">
 	<fieldset>
     <legend>Flight {0}</legend>
@@ -53,11 +112,11 @@ function getFlightHTML(){
 			</tr>
 			<tr>
 				<td>Departure date:</td>
-				<td><input type="date"></td>
+				<td><input type="date" value={1}></td>
 			</tr>
 			<tr>
 				<td>Departure time:</td>
-				<td><input type=time></td>
+				<td><input type=time step="300"></td>
 			</tr>
 			<tr>
 				<td>Arrival city:</td>
@@ -65,11 +124,11 @@ function getFlightHTML(){
 			</tr>
 			<tr>
 				<td>Arrival date:</td>
-				<td><input type="date"></td>
+				<td><input type="date" value={1}></td>
 			</tr>
 			<tr>
 				<td>Arrival time:</td>
-				<td> <input type="time"></td>
+				<td> <input type="time" step="300"></td>
 			</tr>
 			<tr>
 				<td>Airline confirmation no.:</td>
@@ -81,13 +140,14 @@ function getFlightHTML(){
 			</tr>
 		</table>
 	</fieldset>
-	`.format(flight_counter)
+	`.format(flight_counter, moment().format("YYYY-MM-DD"))
 	
 	return flight_str
 }
 
 ////////////////////////////////////
 // hotel
+////////////////////////////////////
 
 function addHotel(divName){
 
@@ -96,6 +156,7 @@ function addHotel(divName){
   document.getElementById(divName).appendChild(newdiv);
   hotel_counter++;
   
+  focusFirstInput(newdiv);
 }
 
 function getHotelHTML(){	
@@ -121,11 +182,11 @@ function getHotelHTML(){
 			</tr>
 			<tr>
 				<td>Check in date:</td>
-				<td><input type="date"></td>
+				<td><input type="date" value={1}></td>
 			</tr>
 			<tr>
 				<td>Check out date:</td>
-				<td><input type="date"></td>
+				<td><input type="date" value={1}></td>
 			</tr>
 			<tr>
 				<td>Room type:</td>
@@ -141,13 +202,14 @@ function getHotelHTML(){
 			</tr>
 		</table>
 	</fieldset>
-	`.format(hotel_counter)
+	`.format(hotel_counter, moment().format("YYYY-MM-DD"))
 	
 	return hotel_str
 }
 
 ////////////////////////////////////
 // ground transportation
+////////////////////////////////////
 
 function addGroundT(divName){
 
@@ -155,6 +217,8 @@ function addGroundT(divName){
   newdiv.innerHTML = getGroundTHTML();
   document.getElementById(divName).appendChild(newdiv);
   groundT_counter++;
+  
+  focusFirstInput(newdiv);
   
 }
 
@@ -177,11 +241,11 @@ function getGroundTHTML(){
 			</tr>
 			<tr>
 				<td>Departure date:</td>
-				<td><input type="date"></td>
+				<td><input type="date" value={1}></td>
 			</tr>
 			<tr>
 				<td>Departure time:</td>
-				<td><input type=time></td>
+				<td><input type=time step="300"></td>
 			</tr>
 			<tr>
 				<td>Arrival city:</td>
@@ -189,11 +253,11 @@ function getGroundTHTML(){
 			</tr>
 			<tr>
 				<td>Arrival date:</td>
-				<td><input type="date"></td>
+				<td><input type="date" value={1}></td>
 			</tr>
 			<tr>
 				<td>Arrival time:</td>
-				<td> <input type="time"></td>
+				<td> <input type="time" step="300"></td>
 			</tr>
 			<tr>
 				<td>Confirmation no.:</td>
@@ -205,13 +269,14 @@ function getGroundTHTML(){
 			</tr>
 		</table>
 	</fieldset>
-	`.format(groundT_counter)
+	`.format(groundT_counter, moment().format("YYYY-MM-DD"))
 	
 	return groundT_str
 }
 
 ////////////////////////////////////
 // car rental
+////////////////////////////////////
 
 function addCarRental(divName){
 
@@ -219,6 +284,8 @@ function addCarRental(divName){
   newdiv.innerHTML = getCarRentalTHTML();
   document.getElementById(divName).appendChild(newdiv);
   rental_counter++;
+  
+  focusFirstInput(newdiv);
   
 }
 
@@ -241,19 +308,19 @@ function getCarRentalTHTML(){
 			</tr>
 			<tr>
 				<td>Pick up date:</td>
-				<td><input type="date"></td>
+				<td><input type="date" value={1}></td>
 			</tr>
 			<tr>
 				<td>Pick up time:</td>
-				<td><input type=time></td>
+				<td><input type=time step="300"></td>
 			</tr>
 			<tr>
 				<td>Drop off date:</td>
-				<td><input type="date"></td>
+				<td><input type="date" value={1}></td>
 			</tr>
 			<tr>
 				<td>Drop off time:</td>
-				<td><input type="time"></td>
+				<td><input type="time" step="300"></td>
 			</tr>
 			<tr>
 				<td>Confirmation no.:</td>
@@ -269,11 +336,16 @@ function getCarRentalTHTML(){
 			</tr>
 		</table>
 	</fieldset>
-	`.format(rental_counter)
+	`.format(rental_counter, moment().format("YYYY-MM-DD"))
 	
 	return car_rental_str
 }
 
+function focusFirstInput(newdiv){
+	var inputs = newdiv.getElementsByTagName( 'input' );
+	inputs[0].focus();
+	inputs[0].select();
+}
 
 function removeElement(divName, class_str){
 	
@@ -297,19 +369,20 @@ function removeElement(divName, class_str){
 
 ///////////////////////////////////
 // generateReport
+////////////////////////////////////
+
 function generateReport(){
 	
 	var tables = document.getElementsByTagName('table');
     var txt = "";
-    var i;
-	var date_list = [];
-	var content_list = [];
-    for (i = 0; i < tables.length; i++) {
+	var report_objects = [];
+    for (var i = 0; i < tables.length; i++) {
 		//switch on type
 		var cur_id = tables[i].id;
 		var cat_cur_id = cur_id.split("_")
 		cur_txt = ""
-		var date = getDateElement(tables[i], cat_cur_id[0])
+		var cur_date_str = getDateElement(tables[i], cat_cur_id[0])
+		var cur_time_str = getTimeElement(tables[i], cat_cur_id[0])
 		switch(cat_cur_id[0]){
 			case 'flight': 
 				cur_txt = reportFlight(tables[i]);		
@@ -323,21 +396,146 @@ function generateReport(){
 			case 'carRental': 
 				cur_txt = reportCar(tables[i]);
 				break;				
-		}   
+		}
+		
+		var cur_date_time = null;
+		if(cat_cur_id[0] != "hotel"){
+			cur_date_time = moment(cur_date_str);
+			//TODO: check on pamelas PC how a string is stored
+			var split_time = cur_time_str.split(":");
+			cur_date_time.hour(parseInt(split_time[0]));
+			cur_date_time.minute(parseInt(split_time[1]));
+		}
+
+		var obj = {
+			id : i,
+			category : cat_cur_id[0],
+			content  : cur_txt,
+			date : moment(cur_date_str),
+			date_str : cur_date_str,
+			time     : cur_date_time
+		};		
+		
 		txt = txt + cur_txt + "</br>";
-		date_list.push(date);
-		content_list.push(cur_txt);
+		report_objects.push(obj);
     }
-	for(var prop in date_list) {
-		var date_parse = new Date(Date.parse(prop));
-	    alert(date_parse.toString());
-	   
+	
+	//sort date strings
+	report_objects.sort(function(a, b) { 
+		return a.date - b.date;
+	})
+	
+	//unique dates
+	var unique_dates = []
+	
+	var date_groups = {}
+	for(var i=0; i < report_objects.length; i++){
+		
+	    if(!contains.call(unique_dates, report_objects[i].date_str)){
+			date_groups["{0}".format(report_objects[i].date_str)] = [report_objects[i]];
+			unique_dates.push(report_objects[i].date_str)
+		}
+		else{
+			date_groups["{0}".format(report_objects[i].date_str)].push(report_objects[i])
+		}
 	}
 	
-	document.getElementById("resultArea").innerHTML = txt;
+	//re-order each date_group
+	for(prop in date_groups){
+		if(date_groups[prop].length > 1){
+			date_groups[prop] = sortGroupByCategory(date_groups[prop]);
+		}
+	}
+	
+	//append the following format to each first element
+	//Monday, June 13, 2016
+	for(prop in date_groups){
+		var cur_date = date_groups[prop][0].date;
+		var header_date = cur_date.format("dddd, MMMM DD, YYYY");
+		date_groups[prop][0].content = "<b>{0}</b></br></br></br>".format(header_date) + date_groups[prop][0].content;
+	}
+	
+	//assemble output in right order
+	var right_order_txt = ""
+	for(prop in date_groups){
+		for(var i=0; i<date_groups[prop].length; i++){
+			right_order_txt = right_order_txt + date_groups[prop][i].content + "</br>";
+		}
+	}
+	
+	
+	//document.getElementById("resultArea").innerHTML = txt;
+	document.getElementById("resultArea").innerHTML = right_order_txt;
 }
 
+function sortGroupByCategory(group){
+	
+	var full_group = group.slice();
+	var hotel_idxs = []
+	var hotel_group = [];
+	
+	for(var i=0; i < group.length; i++){
+		if(group[i].category == 'hotel'){
+			hotel_idxs.push(i);
+		}
+	}
+	
+	if(hotel_idxs.length){
+		//move hotel(s) to end
+		for(var i=0; i < hotel_idxs.length; i++){
+			var move_by = group.length - (hotel_idxs[i]);
+			group.move(hotel_idxs[i], move_by);
+		}
+		
+		//split in two parts
+		hotel_group = group.slice(group.length - hotel_idxs.length);
+		group = group.slice(0, group.length - hotel_idxs.length);
+	}
+	
+	//sort group by time	
+	group.sort(function(a, b) { 
+		return a.time - b.time;
+	})
+	
+	//merge back
+	if(hotel_idxs.length){
+		group = group.concat(hotel_group);
+	}
+	
+	return group
+	
+}
+
+
 function getDateElement(node, category){
+	
+	var node_data = []; 
+	var input = node.getElementsByTagName("input"); 
+    for(var z = 0; z < input.length; z++){ 
+		if(z != input.length-1){
+			node_data.push(input[z].value.trim()); 
+		}
+    } 
+	
+	var date;
+	switch(category){
+		case "flight":	
+			date = node_data[4];
+			break;
+		case "hotel": 
+			date = node_data[4];
+			break;
+		case "groundT": 
+			date = node_data[3];
+			break;
+		case "carRental": 
+			date = node_data[3];
+			break;	 
+	}
+	return date;
+}
+
+function getTimeElement(node, category){
 	
 	var node_data = []; 
 	var input = node.getElementsByTagName( 'input' ); 
@@ -346,22 +544,22 @@ function getDateElement(node, category){
 			node_data.push( input[z].value.trim() ); 
     } 
 	
-	var date;
+	var time;
 	switch(category){
 		case 'flight':	
-			date = node_data[4];
+			time = node_data[5];
 			break;
 		case 'hotel': 
-			date = node_data[4];
+			time = null;
 			break;
 		case 'groundT': 
-			date = node_data[3];
+			time = node_data[4];
 			break;
 		case 'carRental': 
-			date = node_data[3];
+			time = node_data[4];
 			break;	 
 	}
-	return date
+	return time;
 }
 
 function reportFlight(flight_node){
@@ -375,12 +573,20 @@ function reportFlight(flight_node){
     } 
 	//alert(flight_data)
 	
+	var start_date = moment(flight_data[4])
+	var end_date = moment(flight_data[7])
+	var over_night = ""
+	diff_days = end_date.diff(start_date, 'days');
+	if(diff_days){
+		over_night = " (+{0}) ".format(diff_days);
+	}
+	
 	//formatting
 	flight_report = "Flight</br></br>" +
 				  flight_data[0] + " " + flight_data[1] + "</br>" +
-				 "Departing from: " + flight_data[3] + " at " + formatTime(flight_data[5]) + "[TODO:  (+1 if ADATE is larger than DDATE)]</br>" + 
+				 "Departing from: " + flight_data[3] + " at " + formatTime(flight_data[5]) + over_night + "</br>" + 
 				 "Arriving at: " + flight_data[6] + " at " +  formatTime(flight_data[8]) + "</br>" + 
-				 "Seat: " + flight_data[2] + "</br>"
+				 "Seat: " + flight_data[2] + "</br>" +	
 				 "Airline confirmation no.: " + flight_data[9] + "</br></br>"; 
 	
 	return flight_report
@@ -397,13 +603,17 @@ function reportHotel(hotel_node){
     } 
 	//alert(hotel_data)
 	
+	var start_date = moment(hotel_data[4])
+	var end_date = moment(hotel_data[5])
+	var number_of_nights = end_date.diff(start_date, 'days');
+	
 	//formatting
 	hotel_report = "Hotel </br></br>" + 
 				 hotel_data[0] + " (" + hotel_data[3] + ")</br>" +
 				 hotel_data[1] + ", " + hotel_data[2] + "</br>" + 
 				 "Check in date: " + hotel_data[4] + "</br>" + 
 				 "Check out date: " + hotel_data[5] + "</br>" +  				 
-				 "Duration: [TO BE CALCULATED]" + "</br>" + 
+				 "Duration: {0} nights".format(number_of_nights) + "</br>" + 
 				 "Room type: " +  hotel_data[6] + "</br>" + 
 				 "Hotel confirmation no.: " + hotel_data[7] + "</br></br>"; 
 	
@@ -421,11 +631,19 @@ function reportGroundT(groundT_node){
     } 
 	//alert(groundT_data)
 	
+	var start_date = moment(groundT_data[3])
+	var end_date = moment(groundT_data[6])
+	var over_night = ""
+	diff_days = end_date.diff(start_date, 'days');
+	if(diff_days){
+		over_night = " (+{0}) ".format(diff_days);
+	}
+	
 	//formatting
 	groundT_report = "Ground transportation </br></br>" + 
 				  groundT_data[0] + " " + groundT_data[1] + "</br>" +
 				 "Departing from: " + groundT_data[2] + " at " + formatTime(groundT_data[4]) + "</br>" + 
-				 "Arriving at: " + groundT_data[5] + " at " +  formatTime(groundT_data[7]) + "[TODO:  (+1 if ADATE is larger than DDATE)]</br>" +  
+				 "Arriving at: " + groundT_data[5] + " at " +  formatTime(groundT_data[7]) + over_night + "</br>" +  
 				 "Confirmation no.: " + groundT_data[8] + "</br></br>"; 
 	
 	return groundT_report
@@ -441,27 +659,17 @@ function reportCar(car_node){
 			car_data.push( input[z].value.trim() ); 
     } 
 	//alert(car_data)
+	var start_date = moment(car_data[3])
+	var end_date = moment(car_data[5])
+	var number_of_days = end_date.diff(start_date, 'days');
 	
 	//formatting
 	car_report = "Rental car </br></br>" +
 				 car_data[0] + "(" + car_data[8] + " )</br>" + car_data[1] + ", " + car_data[2] + "</br>" + 
 				 "Pick up: " + car_data[3] + " at " + formatTime(car_data[4]) + "</br>" + 
 				 "Drop off: " + car_data[5] + " at " +  formatTime(car_data[6]) + "</br>" + 
-				 "Duration: [TO BE CALCULATED]" + "</br>" + 
+				 "Duration: {0} days".format(number_of_days) + "</br>" + 
 				 "Confirmation no.: " + car_data[7] + "</br></br>"; 
 	
 	return car_report
-}
-
-function formatTime(time){
-	var isAM = Boolean(1);
-	var suffix;
-	var split_time = time.split(":");
-	var hour = parseInt(split_time[0]);
-	if (hour >= 12){
-		isAM = Boolean(0)
-	}
-	hour = ((hour + 11) % 12 + 1);
-	isAM ? suffix = "AM" : suffix = "PM" ;
-	return "{0}:{1} {2}".format(hour.toString(), split_time[1], suffix)
 }
