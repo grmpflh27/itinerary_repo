@@ -31,7 +31,7 @@ function addFlight(divName){
 }
 
 function getFlightHTML(){	
-	var flight_str = `<div>
+	var flight_str = `<div id="div_flight_{0}">
 	<fieldset>
     <legend>Flight {0}</legend>
 		<table border=0 id="flight_{0}">
@@ -41,6 +41,10 @@ function getFlightHTML(){
 			</tr>
 			<tr>
 				<td>Flight no.:</td>
+				<td><input type="text"></td>
+			</tr>
+			<tr>
+				<td>Seat:</td>
 				<td><input type="text"></td>
 			</tr>
 			<tr>
@@ -73,7 +77,7 @@ function getFlightHTML(){
 			</tr>
 			<tr>
 				<td>&nbsp;</td>
-				<td><input type="button" value="Remove flight" onClick="removeElement(document.getElementById('flight_{0}').id, 'flight')"</td>
+				<td><input type="button" value="Remove flight" onClick="removeElement(document.getElementById('div_flight_{0}').id, 'flight')"</td>
 			</tr>
 		</table>
 	</fieldset>
@@ -95,7 +99,7 @@ function addHotel(divName){
 }
 
 function getHotelHTML(){	
-	var hotel_str = `<div>
+	var hotel_str = `<div  id="div_hotel_{0}">
 	<fieldset>
     <legend>Hotel {0}</legend>
 		<table border=0 id="hotel_{0}">
@@ -133,7 +137,7 @@ function getHotelHTML(){
 			</tr>
 			<tr>
 				<td>&nbsp;</td>
-				<td><input type="button" value="Remove hotel" onClick="removeElement(document.getElementById('hotel_{0}').id, 'hotel')"</td>
+				<td><input type="button" value="Remove hotel" onClick="removeElement(document.getElementById('div_hotel_{0}').id, 'hotel')"</td>
 			</tr>
 		</table>
 	</fieldset>
@@ -155,7 +159,7 @@ function addGroundT(divName){
 }
 
 function getGroundTHTML(){	
-	var groundT_str = `<div>
+	var groundT_str = `<div id=div_groundT_{0}>
 	<fieldset>
     <legend>Ground transportation {0}</legend>
 		<table border=0  id="groundT_{0}">
@@ -197,7 +201,7 @@ function getGroundTHTML(){
 			</tr>
 			<tr>
 				<td>&nbsp;</td>
-				<td><input type="button" value="Remove ground transportation" onClick="removeElement(document.getElementById('groundT_{0}').id, 'ground_t')"</td>
+				<td><input type="button" value="Remove ground transportation" onClick="removeElement(document.getElementById('div_groundT_{0}').id, 'ground_t')"</td>
 			</tr>
 		</table>
 	</fieldset>
@@ -219,7 +223,7 @@ function addCarRental(divName){
 }
 
 function getCarRentalTHTML(){	
-	var car_rental_str = `<div>
+	var car_rental_str = `<div id=div_carRental_{0}>
 	<fieldset>
     <legend>Car rental {0}</legend>
 		<table border=0 id="carRental_{0}">
@@ -261,7 +265,7 @@ function getCarRentalTHTML(){
 			</tr>
 			<tr>
 				<td>&nbsp;</td>
-				<td><input type="button" value="Remove ground transportation" onClick="removeElement(document.getElementById('car_rental_{0}').id, 'ground_t')"</td>
+				<td><input type="button" value="Remove car rental" onClick="removeElement(document.getElementById('div_carRental_{0}').id, 'ground_t')"</td>
 			</tr>
 		</table>
 	</fieldset>
@@ -298,28 +302,69 @@ function generateReport(){
 	var tables = document.getElementsByTagName('table');
     var txt = "";
     var i;
+	var date_list = [];
+	var content_list = [];
     for (i = 0; i < tables.length; i++) {
 		//switch on type
 		var cur_id = tables[i].id;
 		var cat_cur_id = cur_id.split("_")
+		cur_txt = ""
+		var date = getDateElement(tables[i], cat_cur_id[0])
 		switch(cat_cur_id[0]){
 			case 'flight': 
-				txt = txt + reportFlight(tables[i], cat_cur_id[1]) + "</br>";
+				cur_txt = reportFlight(tables[i]);		
 				break;
 			case 'hotel': 
+				cur_txt = reportHotel(tables[i]);
 				break;
 			case 'groundT': 
+				cur_txt = reportGroundT(tables[i]);
 				break;
 			case 'carRental': 
-				txt = txt + reportCar(tables[i], cat_cur_id[1]) + "</br>";
-				break;						
+				cur_txt = reportCar(tables[i]);
+				break;				
 		}   
+		txt = txt + cur_txt + "</br>";
+		date_list.push(date);
+		content_list.push(cur_txt);
     }
+	for(var prop in date_list) {
+		var date_parse = new Date(Date.parse(prop));
+	    alert(date_parse.toString());
+	   
+	}
 	
 	document.getElementById("resultArea").innerHTML = txt;
 }
 
-function reportFlight(flight_node, flight_no){
+function getDateElement(node, category){
+	
+	var node_data = []; 
+	var input = node.getElementsByTagName( 'input' ); 
+    for ( var z = 0; z < input.length; z++ ) { 
+		if(z != input.length-1)
+			node_data.push( input[z].value.trim() ); 
+    } 
+	
+	var date;
+	switch(category){
+		case 'flight':	
+			date = node_data[4];
+			break;
+		case 'hotel': 
+			date = node_data[4];
+			break;
+		case 'groundT': 
+			date = node_data[3];
+			break;
+		case 'carRental': 
+			date = node_data[3];
+			break;	 
+	}
+	return date
+}
+
+function reportFlight(flight_node){
 	var flight_report;
     var flight_data = []; 
 	
@@ -331,15 +376,62 @@ function reportFlight(flight_node, flight_no){
 	//alert(flight_data)
 	
 	//formatting
-	flight_report = flight_data[0] + " " + flight_data[1] + "</br>" +
-				 "Departing from: " + flight_data[2] + " at " + formatTime(flight_data[4]) + "[TODO:  (+1 if ADATE is larger than DDATE)]</br>" + 
-				 "Arriving at: " + flight_data[5] + " at " +  formatTime(flight_data[7]) + "</br>" +  
-				 "Airline confirmation no.: " + flight_data[8] + "</br></br>"; 
+	flight_report = "Flight</br></br>" +
+				  flight_data[0] + " " + flight_data[1] + "</br>" +
+				 "Departing from: " + flight_data[3] + " at " + formatTime(flight_data[5]) + "[TODO:  (+1 if ADATE is larger than DDATE)]</br>" + 
+				 "Arriving at: " + flight_data[6] + " at " +  formatTime(flight_data[8]) + "</br>" + 
+				 "Seat: " + flight_data[2] + "</br>"
+				 "Airline confirmation no.: " + flight_data[9] + "</br></br>"; 
 	
 	return flight_report
 }
 
-function reportCar(car_node, car_no){
+function reportHotel(hotel_node){
+	var hotel_report;
+    var hotel_data = []; 
+	
+	var input = hotel_node.getElementsByTagName( 'input' ); 
+    for ( var z = 0; z < input.length; z++ ) { 
+		if(z != input.length-1)
+			hotel_data.push( input[z].value.trim() ); 
+    } 
+	//alert(hotel_data)
+	
+	//formatting
+	hotel_report = "Hotel </br></br>" + 
+				 hotel_data[0] + " (" + hotel_data[3] + ")</br>" +
+				 hotel_data[1] + ", " + hotel_data[2] + "</br>" + 
+				 "Check in date: " + hotel_data[4] + "</br>" + 
+				 "Check out date: " + hotel_data[5] + "</br>" +  				 
+				 "Duration: [TO BE CALCULATED]" + "</br>" + 
+				 "Room type: " +  hotel_data[6] + "</br>" + 
+				 "Hotel confirmation no.: " + hotel_data[7] + "</br></br>"; 
+	
+	return hotel_report
+}
+
+function reportGroundT(groundT_node){
+	var groundT_report;
+    var groundT_data = []; 
+	
+	var input = groundT_node.getElementsByTagName( 'input' ); 
+    for ( var z = 0; z < input.length; z++ ) { 
+		if(z != input.length-1)
+			groundT_data.push( input[z].value.trim() ); 
+    } 
+	//alert(groundT_data)
+	
+	//formatting
+	groundT_report = "Ground transportation </br></br>" + 
+				  groundT_data[0] + " " + groundT_data[1] + "</br>" +
+				 "Departing from: " + groundT_data[2] + " at " + formatTime(groundT_data[4]) + "</br>" + 
+				 "Arriving at: " + groundT_data[5] + " at " +  formatTime(groundT_data[7]) + "[TODO:  (+1 if ADATE is larger than DDATE)]</br>" +  
+				 "Confirmation no.: " + groundT_data[8] + "</br></br>"; 
+	
+	return groundT_report
+}
+
+function reportCar(car_node){
 	var car_report;
     var car_data = []; 
 	
@@ -351,7 +443,8 @@ function reportCar(car_node, car_no){
 	//alert(car_data)
 	
 	//formatting
-	car_report = car_data[0] + "(" + car_data[8] + " )</br>" + car_data[1] + ", " + car_data[2] + "</br>" + 
+	car_report = "Rental car </br></br>" +
+				 car_data[0] + "(" + car_data[8] + " )</br>" + car_data[1] + ", " + car_data[2] + "</br>" + 
 				 "Pick up: " + car_data[3] + " at " + formatTime(car_data[4]) + "</br>" + 
 				 "Drop off: " + car_data[5] + " at " +  formatTime(car_data[6]) + "</br>" + 
 				 "Duration: [TO BE CALCULATED]" + "</br>" + 
