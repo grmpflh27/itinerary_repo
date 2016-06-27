@@ -228,6 +228,17 @@ function getGroundTHTML(){
     <legend>Ground transportation {0}</legend>
 		<table border=0  id="groundT_{0}">
 			<tr>
+				<td>Type</td>
+				<td>
+					<select>
+					  <option value="Train">Train</option>
+					  <option value="Bus">Bus</option>
+					  <option value="Motorcoach">Motorcoach </option>
+					  <option value="Ferry">Ferry</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
 				<td>Transport company:</td>
 				<td><input type="text"></td>
 			</tr>
@@ -481,15 +492,14 @@ function sortGroupByCategory(group){
 	}
 	
 	if(hotel_idxs.length){
-		//move hotel(s) to end
+		//remove hotel(s) from group
 		for(var i=0; i < hotel_idxs.length; i++){
-			var move_by = group.length - (hotel_idxs[i]);
-			group.move(hotel_idxs[i], move_by);
+				group.splice(hotel_idxs[i], 1);
 		}
 		
 		//split in two parts
-		hotel_group = group.slice(group.length - hotel_idxs.length);
-		group = group.slice(0, group.length - hotel_idxs.length);
+		//hotel_group = group.slice(group.length - hotel_idxs.length);
+		//group = group.slice(0, group.length - hotel_idxs.length);
 	}
 	
 	//sort group by time	
@@ -497,12 +507,14 @@ function sortGroupByCategory(group){
 		return a.time - b.time;
 	})
 	
-	//merge back
+	//get hotels back at end of list
 	if(hotel_idxs.length){
-		group = group.concat(hotel_group);
+		for(var i=0; i < hotel_idxs.length; i++){
+			group.push(full_group[hotel_idxs[i]]);
+		}
 	}
 	
-	return group
+	return group;
 	
 }
 
@@ -583,9 +595,9 @@ function reportFlight(flight_node){
 	
 	//formatting
 	flight_report = "Flight</br></br>" +
-				  flight_data[0] + " " + flight_data[1] + "</br>" +
-				 "Departing from: " + flight_data[3] + " at " + formatTime(flight_data[5]) + over_night + "</br>" + 
-				 "Arriving at: " + flight_data[6] + " at " +  formatTime(flight_data[8]) + "</br>" + 
+				 flight_data[0] + " " + flight_data[1] + "</br>" +
+				 "Departing from: " + flight_data[3] + " at " + formatTime(flight_data[5]) + "</br>" + 
+				 "Arriving at: " + flight_data[6] + " at " +  formatTime(flight_data[8]) + over_night + "</br>" + 
 				 "Seat: " + flight_data[2] + "</br>" +	
 				 "Airline confirmation no.: " + flight_data[9] + "</br></br>"; 
 	
@@ -640,7 +652,7 @@ function reportGroundT(groundT_node){
 	}
 	
 	//formatting
-	groundT_report = "Ground transportation </br></br>" + 
+	groundT_report = "{0} </br></br>".format(groundT_node.getElementsByTagName( 'select' )[0].value) + 
 				  groundT_data[0] + " " + groundT_data[1] + "</br>" +
 				 "Departing from: " + groundT_data[2] + " at " + formatTime(groundT_data[4]) + "</br>" + 
 				 "Arriving at: " + groundT_data[5] + " at " +  formatTime(groundT_data[7]) + over_night + "</br>" +  
