@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+<title>Itinerary Builder Travel Best Bets</title>
+<link rel="stylesheet" href="files/faary.css" type="text/css" />
+<script type="text/javascript" src="files/jquery.js"></script>
+<script src="js/quoter.js" language="Javascript" type="text/javascript"></script>
+<script src="js/moment.js" language="Javascript" type="text/javascript"></script>
+</head>
+<body>
+
+<form method="post" action="" method="post" class="iform">
+<li class="iheader">Generate quote</li>
+
+<script>
+    moment().format();
+	<!-- highlight field -->
+    window.onload = function(){
+	  var text_input = document.getElementById ("customer_name");
+	  text_input.focus ();
+	  text_input.select ();
+	}
+</script>
+
+
+
+<h2>General information</h2>
+Customer name: <input type="text" id="customer_name" size=50 onFocus="this.select()"><br/>
+Package name: <input type="text" id="package" size=50><br/>
+Number of adults: <input type="number" min="1" max="100" step="1" value="2" id="adults"></br>
+Number of nights: <input type="number" min="1" max="100" step="1" value="4" id="nights"></br>
+Accomodation description: <textarea rows=4 cols=50 id="acco_desc"></textarea></br>
+
+<div id="dynamicArea">
+<!-- will be dynamically filled with flights -->
+</div>
+
+<script type="text/javascript">
+	addFlight('dynamicArea');
+	addHotel('dynamicArea');
+	updateDates();
+</script>
+<input type="button" value="Add hotel" onClick="addHotel('dynamicArea');"></br>
+<!--
+<input type="button" value="Add flight" onClick="addFlight('dynamicArea');"></br>
+<input type="button" value="Add ground transportation" onClick="addGroundT('dynamicArea');"></br>
+<input type="button" value="Add car rental" onClick="addCarRental('dynamicArea');"></br>
+-->
+<hr>
+<input type="button" value="Submit" onclick="generateReport()"/>
+</form>
+</br>
+<hr>
+</br>
+
+<div id="resultArea">
+<!-- formatted itinerary will be written here -->
+
+</div>
+
+
+
+</body>
+</html>
