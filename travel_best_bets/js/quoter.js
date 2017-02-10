@@ -3,7 +3,22 @@
  */
 
 const settings = {
-	DateFormat : "MMMM Do, YYYY"
+	DateFormat : "MMMM Do, YYYY",
+	ValidSizeForFlight : 10,
+}
+
+const templates = {
+	greeting : "Hello {0},</br></br>Thanks for your message, I'd be happy to help you book this trip!</br></br>",
+	package_overview: `Our {0} includes: \
+						<ul><li>round trip flights from {1} to {2}</li>\
+		    				<li>{3} accommodation{4} in {5}</li>\
+		    				<li>round trip transfers between airport and hotel</li></ul></br>`,
+	flight : "Depart: {0} at {1}{2}, Arrive {3} at {4}{5}</br>",
+	hotel : `On these dates, {0}. The total price per person would be:</br>
+					Adult ({1}): \${2} + 
+					\${3} taxes and fees = \${4}</br>`,
+	ending : "Let me know what you think of these, and I'm happy to look up some more options. Thanks!",
+	overnight_str : " (+{0}) "
 }
 
 //////////////
@@ -352,7 +367,7 @@ function getHotelHTML(){
 		}
 
  		//parse it out
- 		if (cur.length == 10){
+ 		if (cur.length == settings.ValidSizeForFlight){
  			flight_parse_obj = {
  				orig : cur[4],
  				dest : cur[5],
@@ -374,8 +389,12 @@ function getHotelHTML(){
 
  	//generate flight reports:
  	flight_report = ""
- 	flight_report += generateParsedFlightReport(outbound_group)
- 	flight_report += generateParsedFlightReport(inbound_group)
+ 	if (outbound_group.length){
+ 		flight_report += generateParsedFlightReport(outbound_group)
+ 	}
+ 	if (inbound_group.length){
+ 		flight_report += generateParsedFlightReport(inbound_group)
+ 	}
 	return flight_report
  }
 
@@ -391,16 +410,16 @@ function getHotelHTML(){
  		var cur = out_flight[i]
 		var diff_days = daysBetween(start_date, moment(cur.adate, settings.DateFormat))
 		if(diff_days){
-			over_night = " (+{0}) ".format(diff_days);
+			over_night = templates.overnight_str.format(diff_days);
 		}
 		if (i != 0){
 			var d_diff_days = daysBetween(start_date, moment(cur.ddate, settings.DateFormat))
 			if(diff_days){
-				dep_over_night = " (+{0}) ".format(d_diff_days);
+				dep_over_night = templates.overnight_str.format(d_diff_days);
 			}
 		}
 
- 		flight_str += "Depart: {0} at {1}{2}, Arrive {3} at {4}{5}</br>".format(cur.orig, cur.dtime, dep_over_night, cur.dest, cur.atime, over_night)
+ 		flight_str += templates.flight.format(cur.orig, cur.dtime, dep_over_night, cur.dest, cur.atime, over_night)
 	}
 	flight_str += "</br>"
 	return flight_str
@@ -409,7 +428,14 @@ function getHotelHTML(){
 function generateReport(){
 
 	//flight report from template
-	var right_order_txt = parseTemplate();
+
+
+	var right_order_txt;
+
+
+	if (document.getElementById("flight_conv").value){
+		right_order_txt = parseTemplate();
+	}
 
 	// init
 	var customer = document.getElementById("customer_name").value;
@@ -497,18 +523,14 @@ function generateReport(){
 		}
 	}
 
-	// prepend generat information:
-	var gen_info_template = "Hello {0},</br></br>Thanks for your message, I'd be happy to help you book this trip!</br></br> \
-		Our {1} includes: \
-		<ul><li>round trip flights from {2} to {3}</li>\
-		    <li>{4} accommodation{5} in {6}</li>\
-		    <li>round trip transfers between airport and hotel</li></ul></br>".format(customer, package, ORIGIN_CITY, DEST_CITY, NO_OF_NIGHTS, plural, accommodation_desc)
+	// stick together report parts
+	var report = ""
+	report += templates.greeting.format(customer)
+	report += templates.package_overview.format(package, ORIGIN_CITY, DEST_CITY, NO_OF_NIGHTS, plural, accommodation_desc)
+	report += right_order_txt;
+	report += templates.ending
 	
-	// append end greeting
-	var post_stc = "Let me know what you think of these, and I'm happy to look up some more options. Thanks!"
-	right_order_txt = gen_info_template + right_order_txt + post_stc;
-	
-	document.getElementById("resultArea").innerHTML = right_order_txt;
+	document.getElementById("resultArea").innerHTML = report;
 }
 
 function reportFlight(flight_node){
@@ -568,15 +590,10 @@ function reportHotel(hotel_node){
 	var number_of_nights = end_date.diff(start_date, 'days');
 	
 	//formatting
-	//On these dates, <HOTEL 1 TEXT> The total price per person would be:
-	//Adult (<NO. OF ADULTS>): $<BASE PRICE 1> + <TAXES 1> taxes and fees = <TOTAL PRICE 1>
-
 	var base_price = parseFloat(hotel_data[1])
 	var taxes = parseFloat(document.getElementById("taxes").value)
 
-	hotel_report = `On these dates, {0}. The total price per person would be:</br>
-					Adult ({1}): \${2} + 
-					\${3} taxes and fees = \${4}</br>`.format(hotel_data[0], NO_ADULTS, base_price.toFixed(2), taxes.toFixed(2), (base_price + taxes).toFixed(2))
+	hotel_report = templates.hotel.format(hotel_data[0], NO_ADULTS, base_price.toFixed(2), taxes.toFixed(2), (base_price + taxes).toFixed(2))
 
 	return hotel_report
 }
