@@ -1,3 +1,11 @@
+/*
+ * settings
+ */
+
+const settings = {
+	DateFormat : "MMMM Do, YYYY"
+}
+
 //////////////
 // util
 //////////////
@@ -180,6 +188,11 @@ function getDateElement(node, category){
 	return date;
 }
 
+ function daysBetween(start_date, end_date){
+ 	days = end_date.diff(start_date, 'days');
+ 	return days
+ }
+
 function getTimeElement(node, category){
 	
 	var node_data = []; 
@@ -343,14 +356,14 @@ function getHotelHTML(){
  			flight_parse_obj = {
  				orig : cur[4],
  				dest : cur[5],
- 				ddate : moment(cur[3].concat(cur_year)).format("MMMM Do, YYYY"),
+ 				ddate : moment(cur[3].concat(cur_year)).format(settings.DateFormat),
  				dtime : formatTime(cur[6]),
- 				adate : moment(cur[8].concat(cur_year)).format("MMMM Do, YYYY"),
+ 				adate : moment(cur[8].concat(cur_year)).format(settings.DateFormat),
  				atime : formatTime(cur[7])
  			}
 
  			if (inbound){
- 			inbound_group.push(flight_parse_obj)
+ 				inbound_group.push(flight_parse_obj)
 	 		}
 	 		else{
 	 			outbound_group.push(flight_parse_obj)
@@ -370,18 +383,24 @@ function getHotelHTML(){
 
  	var flight_str = ""
  	var over_night = ""
- 	var start_date = moment(out_flight[0].ddate)
+ 	var dep_over_night = ""
+ 	var start_date = moment(out_flight[0].ddate, settings.DateFormat)
  	flight_str += "{0}</br>".format(out_flight[0].ddate)
 
  	for (var i = 0; i < out_flight.length; i++) {
  		var cur = out_flight[i]
-		var end_date = moment(cur.adate)
-		diff_days = end_date.diff(start_date, 'days');
-		console.log(diff_days)
+		var diff_days = daysBetween(start_date, moment(cur.adate, settings.DateFormat))
 		if(diff_days){
 			over_night = " (+{0}) ".format(diff_days);
 		}
- 		flight_str += "Depart: {0} at {1}, Arrive {2} at {3}{4}</br>".format(cur.orig, cur.dtime, cur.dest, cur.atime, over_night)
+		if (i != 0){
+			var d_diff_days = daysBetween(start_date, moment(cur.ddate, settings.DateFormat))
+			if(diff_days){
+				dep_over_night = " (+{0}) ".format(d_diff_days);
+			}
+		}
+
+ 		flight_str += "Depart: {0} at {1}{2}, Arrive {3} at {4}{5}</br>".format(cur.orig, cur.dtime, dep_over_night, cur.dest, cur.atime, over_night)
 	}
 	flight_str += "</br>"
 	return flight_str
@@ -521,10 +540,10 @@ function reportFlight(flight_node){
 	//formatting
 	//<DAY 1>
 	//Depart: <ORIGIN CITY> at <TIME 1>	Arrive: <DESTINATION CITY> at <TIME 2>
-	flight_report = moment(flight_data[1]).format("MMMM Do, YYYY") + "</br>" +
+	flight_report = moment(flight_data[1]).format(settings.DateFormat) + "</br>" +
 					"Depart: " + flight_data[0] + " at " + formatTime(flight_data[2]) + ", " +
 					"Arrive: " + flight_data[3] + " at " + formatTime(flight_data[5]) + over_night + "</br></br>" +
-					moment(flight_data[6]).format("MMMM Do, YYYY") + "</br>" +
+					moment(flight_data[6]).format(settings.DateFormat) + "</br>" +
 					"Depart: " + flight_data[3] + " at " + formatTime(flight_data[7]) + ", " +
 					"Arrive: " + flight_data[0] + " at " + formatTime(document.getElementById("ratime").value) + ret_over_night + "</br>";
 
