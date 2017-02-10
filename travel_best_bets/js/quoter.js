@@ -92,7 +92,14 @@ var NO_OF_NIGHTS = 0;
 var ORIGIN_CITY = "";
 var DEST_CITY = "";
 var NO_ADULTS = 0;
+var IATA_MAP = {}
 
+function loadIATAmap(){
+	$.getJSON("../data/airport.json", function(json) {
+    	console.log(json); 
+    	IATA_MAP = json
+	});
+}
 
 function updateDates(){
 	var night_switch = document.getElementById("nights");
@@ -107,7 +114,6 @@ function updateDates(){
 		radate.value = rddate.value
 	};
 
-	
  	night_switch.onchange = function(){
  		dst_obj = document.getElementById("adate");
 		ret_dep_obj = document.getElementById("rddate");
@@ -314,7 +320,77 @@ function getHotelHTML(){
  * report generation
  */
 
+ function parseTemplate(){
+
+ 	var flight_conv = document.getElementById("flight_conv").value.split('\n')
+ 	var cur_year = moment().year()
+ 	var inbound = false
+ 	var outbound_group = []; var inbound_group = []
+
+ 	var INBOUND = "Inbound";
+ 	for (var i = 0; i < flight_conv.length; i++) {
+
+ 		var cur = flight_conv[i].trim()
+ 		cur = cur.replace(/\s\s+/g, ' ');
+ 		cur = cur.split(' ')
+ 		
+		if (inbound == false && cur.indexOf(INBOUND) !== -1){
+			inbound = true
+		}
+
+ 		//parse it out
+ 		if (cur.length == 10){
+ 			flight_parse_obj = {
+ 				orig : cur[4],
+ 				dest : cur[5],
+ 				ddate : moment(cur[3].concat(cur_year)).format("MMMM Do, YYYY"),
+ 				dtime : formatTime(cur[6]),
+ 				adate : moment(cur[8].concat(cur_year)).format("MMMM Do, YYYY"),
+ 				atime : formatTime(cur[7])
+ 			}
+
+ 			if (inbound){
+ 			inbound_group.push(flight_parse_obj)
+	 		}
+	 		else{
+	 			outbound_group.push(flight_parse_obj)
+	 		}
+ 		}
+ 		
+ 	}
+
+ 	//generate flight reports:
+ 	flight_report = ""
+ 	flight_report += generateParsedFlightReport(outbound_group)
+ 	flight_report += generateParsedFlightReport(inbound_group)
+	return flight_report
+ }
+
+ function generateParsedFlightReport(out_flight){
+
+ 	var flight_str = ""
+ 	var over_night = ""
+ 	var start_date = moment(out_flight[0].ddate)
+ 	flight_str += "{0}</br>".format(out_flight[0].ddate)
+
+ 	for (var i = 0; i < out_flight.length; i++) {
+ 		var cur = out_flight[i]
+		var end_date = moment(cur.adate)
+		diff_days = end_date.diff(start_date, 'days');
+		console.log(diff_days)
+		if(diff_days){
+			over_night = " (+{0}) ".format(diff_days);
+		}
+ 		flight_str += "Depart: {0} at {1}, Arrive {2} at {3}{4}</br>".format(cur.orig, cur.dtime, cur.dest, cur.atime, over_night)
+	}
+	flight_str += "</br>"
+	return flight_str
+ }
+
 function generateReport(){
+
+	//flight report from template
+	var right_order_txt = parseTemplate();
 
 	// init
 	var customer = document.getElementById("customer_name").value;
@@ -396,7 +472,6 @@ function generateReport(){
 	}
 	
 	// assemble output in right order
-	var right_order_txt = ""
 	for(prop in date_groups){
 		for(var i=0; i < date_groups[prop].length; i++){
 			right_order_txt = right_order_txt + date_groups[prop][i].content + "</br>";

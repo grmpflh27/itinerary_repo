@@ -31,15 +31,20 @@ Package name: <input type="text" id="package" size=50><br/>
 Number of adults: <input type="number" min="1" max="100" step="1" value="2" id="adults"></br>
 Number of nights: <input type="number" min="1" max="100" step="1" value="4" id="nights"></br>
 Accomodation description: <textarea rows=4 cols=50 id="acco_desc"></textarea></br>
+Paste flight here: <textarea rows=10 cols=50 id="flight_conv"></textarea></br>
 
 <div id="dynamicArea">
 <!-- will be dynamically filled with flights -->
 </div>
 
 <script type="text/javascript">
-	addFlight('dynamicArea');
+	//addFlight('dynamicArea');
 	addHotel('dynamicArea');
 	updateDates();
+
+	document.onload = function(){
+		loadIATAmap()
+	}
 </script>
 <input type="button" value="Add hotel" onClick="addHotel('dynamicArea');"></br>
 <!--
