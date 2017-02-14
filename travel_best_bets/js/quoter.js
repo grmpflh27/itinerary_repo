@@ -1,7 +1,7 @@
 // TODO
 
 /*
- * family totals
+ * add more TODOs
  */
 
 /*
@@ -25,6 +25,7 @@ const templates = {
 	hotel_adult : `On these dates, {0}. The total price per person would be:</br>
 			 Adult ({1}): \${2} + \${3} taxes and fees = \${4}</br>`,
 	hotel_kid : "Children ({0}): \${1} + \${2} taxes and fees = \${3}</br>",
+	hotel_total : "Total cost: \${0}</br>",
 	ending : "Let me know what you think of these, and I'm happy to look up some more options. Thanks!",
 	overnight_str : " (+{0})"
 }
@@ -71,7 +72,6 @@ function checkKids(){
 	var kids = document.getElementById("children")
 	kids.onchange = function(){
 		kid_elements = document.getElementsByClassName("kid_class")
-		console.log("!!! {0}".format(kid_elements.length))
 		if(kids.value){
 			for(var i; i < kid_elements.length; i++){
 				kid_elements[i].style.visibility = "visible"
@@ -463,7 +463,7 @@ function assembleFlightReport(outbound_group, inbound_group){
 
 function generateReport(){
 
-	var flight_report;
+	var flight_report = "";
 
 	// generate flight report from template
 	var template_f = document.getElementById("flight_conv").value
@@ -568,6 +568,19 @@ function generateHotelReport(){
 											   		   base_price_child.toFixed(2), 
 											   		   taxes_child.toFixed(2), 
 											   		   (base_price_child + taxes_child).toFixed(2))
+		}
+
+		if (document.getElementById("total").checked){
+			var total_cost = 0
+			adult_cost = (base_price_adult + taxes_adult) * number_of_adults
+			if(number_of_children > 0){
+				children_cost = (base_price_child + taxes_child) * number_of_children
+			}
+			else{
+				children_cost = 0
+			}
+
+			hotel_report += templates.hotel_total.format((adult_cost + children_cost).toFixed(2))
 		}
 		hotel_report += "</br>"
     } 
