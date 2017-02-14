@@ -1,7 +1,6 @@
 // TODO
 
 /*
- * REVNET support
  * fix hotel pricing (adult)
  * "round trip <from> ... <to> ...
  * child pricing
@@ -406,8 +405,9 @@ function getHotelHTML(){
 
  	var flight_conv = document.getElementById("flight_conv").value.split('\n')
  	var cur_year = moment().year()
+ 	var outbound_group = []
+ 	var inbound_group = []
  	var inbound = false
- 	var outbound_group = []; var inbound_group = []
 
  	var INBOUND = "Inbound";
  	for (var i = 0; i < flight_conv.length; i++) {
@@ -426,7 +426,7 @@ function getHotelHTML(){
  				orig : "{0}, {1}".format(IATA_MAP[cur[4]].city, IATA_MAP[cur[4]].county),
  				dest : "{0}, {1}".format(IATA_MAP[cur[5]].city, IATA_MAP[cur[5]].county),
  				ddate : moment(cur[3].concat(cur_year)).format(settings.DateFormat),
- 				dtime : formatTime(cur[5]),
+ 				dtime : formatTime(cur[6]),
  				adate : moment(cur[8].concat(cur_year)).format(settings.DateFormat),
  				atime : formatTime(cur[7])
  			}
@@ -441,15 +441,8 @@ function getHotelHTML(){
  		
  	}
 
- 	//generate flight reports:
- 	flight_report = ""
- 	if (outbound_group.length){
- 		flight_report += generateFlightReportFromTemplate(outbound_group)
- 	}
- 	if (inbound_group.length){
- 		flight_report += generateFlightReportFromTemplate(inbound_group)
- 	}
-	return flight_report
+ 	//generate flight reports
+ 	return assembleFlightReport(outbound_group, inbound_group)
  }
 
  function parseRevnetTemplate(){
@@ -481,7 +474,6 @@ function getHotelHTML(){
  			var flight_over_night = moment(cur[4 + offset], "HH:mm") > moment(cur[6 + offset], "HH:mm")
  			var ref_time = moment(cur[2 + offset])
 
-
  			flight_parse_obj = {
  				orig : "{0}, {1}".format(IATA_MAP[cur[3 + offset]].city, IATA_MAP[cur[3 + offset]].county),
  				dest : "{0}, {1}".format(IATA_MAP[cur[5 + offset]].city, IATA_MAP[cur[5 + offset]].county),
@@ -497,14 +489,21 @@ function getHotelHTML(){
 	 		else{
 	 			outbound_group.push(flight_parse_obj)
 	 		}
- 		}
- 		
+ 		} 		
  	}
 
- 	//generate flight reports:
+ 	//generate flight reports
+ 	return assembleFlightReport(outbound_group, inbound_group)
+
+ }
+
+function assembleFlightReport(outbound_group, inbound_group){
+
  	flight_report = ""
  	if (outbound_group.length){
  		flight_report += generateFlightReportFromTemplate(outbound_group)
+ 		ORIGIN_CITY = outbound_group[0].orig
+ 		DEST_CITY = outbound_group[outbound_group.length - 1].dest
  	}
  	if (inbound_group.length){
  		flight_report += generateFlightReportFromTemplate(inbound_group)
