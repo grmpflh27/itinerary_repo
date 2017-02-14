@@ -1,9 +1,6 @@
 // TODO
 
 /*
- * fix hotel pricing (adult)
- * "round trip <from> ... <to> ...
- * child pricing
  * family totals
  */
 
@@ -25,16 +22,72 @@ const templates = {
 		    				<li>{3} night{4} accommodation{4} in {5}</li>\
 		    				<li>round trip transfers between airport and hotel</li></ul></br>`,
 	flight : "Depart: {0} at {1}{2}, Arrive {3} at {4}{5}</br>",
-	hotel : `On these dates, {0}. The total price per person would be:</br>
+	hotel_adult : `On these dates, {0}. The total price per person would be:</br>
 			 Adult ({1}): \${2} + \${3} taxes and fees = \${4}</br>`,
-	hotel_kid : "Children ({1}): \${2} + \${3} taxes and fees = \${4}</br>",
+	hotel_kid : "Children ({0}): \${1} + \${2} taxes and fees = \${3}</br>",
 	ending : "Let me know what you think of these, and I'm happy to look up some more options. Thanks!",
 	overnight_str : " (+{0})"
 }
 
-//////////////
-// util
-//////////////
+/*
+ * signals and slots
+ */
+
+function updateDates(){
+	var night_switch = document.getElementById("nights");
+	var ddate = document.getElementById("ddate");
+		/*ddate.onchange = function(){
+			adate = document.getElementById("adate");
+		adate.value = ddate.value;
+		var rddate = document.getElementById("rddate");
+		var tmp = moment(adate.value).add(night_switch.value, 'days')
+		rddate.value = tmp.format("YYYY-MM-DD")
+		radate = document.getElementById("radate");
+		radate.value = rddate.value
+	};*/
+
+		night_switch.onchange = function(){
+			dst_obj = document.getElementById("adate");
+		ret_dep_obj = document.getElementById("rddate");
+		var tmp = moment(dst_obj.value)
+		tmp = tmp.add(night_switch.value, 'days')
+		ret_dep_obj.value = tmp.format("YYYY-MM-DD")
+		ret_arr_obj = document.getElementById("radate");
+		ret_arr_obj.value = ret_dep_obj.value
+	};
+
+	var flight_conv = document.getElementById("flight_conv")
+	if (flight_conv.addEventListener) {
+			flight_conv.addEventListener('input', function() {
+			if (!IATA_LOADED){
+				loadIATAmap()
+				IATA_LOADED = true
+			}
+			}, false);
+	};
+}
+
+function checkKids(){
+	var kids = document.getElementById("children")
+	kids.onchange = function(){
+		kid_elements = document.getElementsByClassName("kid_class")
+		console.log("!!! {0}".format(kid_elements.length))
+		if(kids.value){
+			for(var i; i < kid_elements.length; i++){
+				kid_elements[i].style.visibility = "visible"
+			}
+		}
+		else{
+			for(var i; i < kid_elements.length; i++){
+				kid_elements[i].style.visibility = "hidden"
+			}
+		}
+	}
+}
+
+/*
+ * util
+ */
 
 //format utility
 if (!String.prototype.format) {
@@ -69,7 +122,6 @@ var contains = function(needle) {
             return index;
         };
     }
-
     return indexOf.call(this, needle) > -1;
 };
 
@@ -85,6 +137,10 @@ Array.prototype.move = function (old_index, new_index) {
     return this; // for testing purposes
 };
 
+/*
+ * Date and Time util
+ */
+
 function formatTime(time){
 	var isAM = Boolean(1);
 	var suffix;
@@ -96,6 +152,33 @@ function formatTime(time){
 	hour = ((hour + 11) % 12 + 1);
 	isAM ? suffix = "AM" : suffix = "PM" ;
 	return "{0}:{1} {2}".format(hour.toString(), split_time[1], suffix)
+}
+
+function daysBetween(start_date, end_date){
+ 	days = end_date.diff(start_date, 'days');
+ 	return days
+}
+
+/*
+ * business logic
+ */
+
+var flight_counter = 1;
+var hotel_counter = 1;
+
+//globals
+var NO_OF_NIGHTS = 0;
+var ORIGIN_CITY = "";
+var DEST_CITY = "";
+var IATA_MAP = {}
+var IATA_LOADED = false
+
+
+function loadIATAmap(){
+	$.getJSON(settings.IATA_path, function(json) {
+		console.log("Loaded json.")
+    	IATA_MAP = json
+	});
 }
 
 function focusFirstInput(newdiv){
@@ -115,168 +198,10 @@ function removeElement(divName, class_str){
 }
 
 /*
- * business logic
- */
-
-var flight_counter = 1;
-var hotel_counter = 1;
-
-//globals
-var NO_OF_NIGHTS = 0;
-var ORIGIN_CITY = "";
-var DEST_CITY = "";
-var NO_ADULTS = 0;
-var IATA_MAP = {}
-var IATA_LOADED = false
-
-function updateDates(){
-	var night_switch = document.getElementById("nights");
-	var ddate = document.getElementById("ddate");
- 	/*ddate.onchange = function(){
- 		adate = document.getElementById("adate");
-		adate.value = ddate.value;
-		var rddate = document.getElementById("rddate");
-		var tmp = moment(adate.value).add(night_switch.value, 'days')
-		rddate.value = tmp.format("YYYY-MM-DD")
-		radate = document.getElementById("radate");
-		radate.value = rddate.value
-	};*/
-
- 	night_switch.onchange = function(){
- 		dst_obj = document.getElementById("adate");
-		ret_dep_obj = document.getElementById("rddate");
-		var tmp = moment(dst_obj.value)
-		tmp = tmp.add(night_switch.value, 'days')
-		ret_dep_obj.value = tmp.format("YYYY-MM-DD")
-		ret_arr_obj = document.getElementById("radate");
-		ret_arr_obj.value = ret_dep_obj.value
-	};
-
-	var flight_conv = document.getElementById("flight_conv")
-	if (flight_conv.addEventListener) {
-  		flight_conv.addEventListener('input', function() {
-			if (!IATA_LOADED){
-				loadIATAmap()
-				IATA_LOADED = true
-			}
-  		}, false);
-	};
-}
-
-
-function loadIATAmap(){
-	$.getJSON(settings.IATA_path, function(json) {
-		console.log("Loaded json.")
-    	IATA_MAP = json
-	});
-}
-
-function checkKids(){
-	var kids = document.getElementById("children")
-	kids.onchange = function(){
-		kid_elements = document.getElementsByClassName("kid_class")
-		console.log("!!! {0}".format(kid_elements.length))
-		if(kids.value){
-			for(var i; i < kid_elements.length; i++){
-				kid_elements[i].style.visibility = "visible"
-			}
-		}
-		else{
-			for(var i; i < kid_elements.length; i++){
-				kid_elements[i].style.visibility = "hidden"
-			}
-		}
-	}
-}
-
-function sortGroupByCategory(group){
-	var full_group = group.slice();
-	var hotel_idxs = []
-	var hotel_group = [];
-	
-	for(var i=0; i < group.length; i++){
-		if(group[i].category == 'hotel'){
-			hotel_idxs.push(i);
-		}
-	}
-	
-	if(hotel_idxs.length){
-		//remove hotel(s) from group
-		for(var i=0; i < hotel_idxs.length; i++){
-				group.splice(hotel_idxs[i], 1);
-		}
-	}
-	
-	//sort group by time	
-	group.sort(function(a, b) { 
-		return a.time - b.time;
-	})
-	
-	//get hotels back at end of list
-	if(hotel_idxs.length){
-		for(var i=0; i < hotel_idxs.length; i++){
-			group.push(full_group[hotel_idxs[i]]);
-		}
-	}
-	return group;
-}
-
-
-function getDateElement(node, category){
-	
-	var node_data = []; 
-	var input = node.getElementsByTagName("input"); 
-    for(var z = 0; z < input.length; z++){ 
-		if(z != input.length-1){
-			node_data.push(input[z].value.trim()); 
-		}
-    } 
-	
-	var date;
-	switch(category){
-		case "flight":	
-			date = node_data[4];
-			break;
-		case "hotel": 
-			date = node_data[4];
-			break;	 
-	}
-	return date;
-}
-
- function daysBetween(start_date, end_date){
- 	days = end_date.diff(start_date, 'days');
- 	return days
- }
-
-function getTimeElement(node, category){
-	
-	var node_data = []; 
-	var input = node.getElementsByTagName( 'input' ); 
-    for ( var z = 0; z < input.length; z++ ) { 
-		if(z != input.length-1)
-			node_data.push( input[z].value.trim() ); 
-    } 
-	
-	var time;
-	switch(category){
-		case 'flight':	
-			time = node_data[5];
-			break;
-		case 'hotel': 
-			time = null;
-			break; 
-	}
-	return time;
-}
-
-/*
  * HTML form elements
  */
 
-////////////////////////////////////
 // flight
-////////////////////////////////////
 
 function addFlight(divName){
   	var newdiv = document.createElement('div');
@@ -348,9 +273,7 @@ function getFlightHTML(){
 	return flight_str
 }
 
-////////////////////////////////////
 // hotel
-////////////////////////////////////
 
 function addHotel(divName){
   var newdiv = document.createElement('div');
@@ -361,7 +284,7 @@ function addHotel(divName){
 }
 
 function getHotelHTML(){	
-	var hotel_str = `<div id="div_hotel_{0}">
+	var hotel_str = `<div id="div_hotel_{0}" class="hotel">
 	<fieldset>
     <legend>Hotel Option {0}</legend>
 		<table border=0 id="hotel_{0}">
@@ -371,7 +294,7 @@ function getHotelHTML(){
 			</tr>
 			<tr>
 				<td>Taxes and fees (adult):</td>
-				<td><input type="text" id="taxes" size=32></td>
+				<td><input type="text" size=32></td>
 			</tr>
 			<tr class="kid_class">
 				<td>Base price (child):</td>
@@ -379,7 +302,7 @@ function getHotelHTML(){
 			</tr>
 			<tr class="kid_class">
 				<td>Taxes and fees (child):</td>
-				<td><input type="text" id="taxes_kid" size=32></td>
+				<td><input type="text" size=32></td>
 			</tr>
 			<tr>
 				<td>Hotel description:</td>
@@ -540,114 +463,41 @@ function assembleFlightReport(outbound_group, inbound_group){
 
 function generateReport(){
 
-	//flight report from template
-	var right_order_txt;
+	var flight_report;
 
+	// generate flight report from template
 	var template_f = document.getElementById("flight_conv").value
 	if (template_f){
 		if (!template_f.startsWith("DEP")){
-			right_order_txt = parseIntAIRTemplate();
+			flight_report = parseIntAIRTemplate();
 		}
 		else{
-			right_order_txt = parseRevnetTemplate();
-		}
-		
+			flight_report = parseRevnetTemplate();
+		}	
 	}
 
-	// init
+	// get central information
 	var customer = document.getElementById("customer_name").value;
 	var package = document.getElementById("package").value;
 	var accommodation_desc = document.getElementById("acco_desc").value;
-	NO_ADULTS = document.getElementById("adults").value;
 	NO_OF_NIGHTS = document.getElementById("nights").value;
 	var plural = ""
 	if (NO_OF_NIGHTS > 1){
 		plural = "s";
 	}
 	
-	// gather elements
-	var tables = document.getElementsByTagName('table');
-    var txt = "";
-	var report_objects = [];
-    for (var i = 0; i < tables.length; i++) {
-		//switch on type
-		var cur_id = tables[i].id;
-		var cat_cur_id = cur_id.split("_")
-		cur_txt = ""
-		var cur_date_str = getDateElement(tables[i], cat_cur_id[0])
-		var cur_time_str = getTimeElement(tables[i], cat_cur_id[0])
-		switch(cat_cur_id[0]){
-			case 'flight': 
-				cur_txt = reportFlight(tables[i]);		
-				break;
-			case 'hotel': 
-				cur_txt = reportHotel(tables[i]);
-				break;			
-		}
-		
-		var cur_date_time = null;
-		if(cat_cur_id[0] != "hotel"){
-			cur_date_time = moment(cur_date_str);
-			//TODO: check on pamelas PC how a string is stored
-			var split_time = cur_time_str.split(":");
-			cur_date_time.hour(parseInt(split_time[0]));
-			cur_date_time.minute(parseInt(split_time[1]));
-		}
-
-		var obj = {
-			id : i,
-			category : cat_cur_id[0],
-			content  : cur_txt,
-			date : moment(cur_date_str),
-			date_str : cur_date_str,
-			time     : cur_date_time
-		};		
-		
-		txt = txt + cur_txt + "</br>";
-		report_objects.push(obj);
-    }
-	
-	//sort date strings
-	report_objects.sort(function(a, b) { 
-		return a.date - b.date;
-	})
-	
-	//unique dates
-	var unique_dates = []
-	var date_groups = {}
-	for(var i=0; i < report_objects.length; i++){
-		
-	    if(!contains.call(unique_dates, report_objects[i].date_str)){
-			date_groups["{0}".format(report_objects[i].date_str)] = [report_objects[i]];
-			unique_dates.push(report_objects[i].date_str)
-		}
-		else{
-			date_groups["{0}".format(report_objects[i].date_str)].push(report_objects[i])
-		}
-	}
-	
-	// re-order each date_group
-	for(prop in date_groups){
-		if(date_groups[prop].length > 1){
-			date_groups[prop] = sortGroupByCategory(date_groups[prop]);
-		}
-	}
-	
-	// assemble output in right order
-	for(prop in date_groups){
-		for(var i=0; i < date_groups[prop].length; i++){
-			right_order_txt = right_order_txt + date_groups[prop][i].content + "</br>";
-		}
-	}
+	// hotel report
+	var hotel_report = generateHotelReport()
 
 	// stick together report parts
-	var report = ""
-	report += templates.greeting.format(customer)
-	report += templates.package_overview.format(package, ORIGIN_CITY, DEST_CITY, NO_OF_NIGHTS, plural, accommodation_desc)
-	report += right_order_txt;
-	report += templates.ending
+	var final_report = ""
+	final_report += templates.greeting.format(customer)
+	final_report += templates.package_overview.format(package, ORIGIN_CITY, DEST_CITY, NO_OF_NIGHTS, plural, accommodation_desc)
+	final_report += flight_report;
+	final_report += hotel_report
+	final_report += templates.ending
 	
-	document.getElementById("resultArea").innerHTML = report;
+	document.getElementById("resultArea").innerHTML = final_report;
 }
 
 function reportFlight(flight_node){
@@ -691,25 +541,36 @@ function reportFlight(flight_node){
 	return flight_report;
 }
 
-function reportHotel(hotel_node){
-	var hotel_report;
-    var hotel_data = []; 
-	
-	var input = hotel_node.getElementsByTagName( 'input' ); 
-    for ( var z = 0; z < input.length; z++ ) { 
-		if(z != input.length-1)
-			hotel_data.push( input[z].value.trim() ); 
+function generateHotelReport(){
+
+	var hotel_options = document.getElementsByClassName("hotel")
+	var hotel_report = "";
+
+	var number_of_adults = parseInt(document.getElementById("adults").value);
+	var number_of_children = parseInt(document.getElementById("children").value);
+
+    // iterate over hotel options
+    for (var z = 0; z < hotel_options.length; z++ ) { 
+		var input_nodes = hotel_options[z].getElementsByTagName("input")
+		var base_price_adult = parseFloat(input_nodes[0].value)
+		var taxes_adult = parseFloat(input_nodes[1].value)
+		var base_price_child = parseFloat(input_nodes[2].value)
+		var taxes_child = parseFloat(input_nodes[3].value)
+		var hotel_description = hotel_options[z].getElementsByTagName("textarea")[0].value
+
+		hotel_report += templates.hotel_adult.format(hotel_description, 
+											   		 number_of_adults, 
+											   		 base_price_adult.toFixed(2), 
+											   		 taxes_adult.toFixed(2), 
+											   		 (base_price_adult + taxes_adult).toFixed(2))
+		if (number_of_children > 0){
+			hotel_report += templates.hotel_kid.format(number_of_children, 
+											   		   base_price_child.toFixed(2), 
+											   		   taxes_child.toFixed(2), 
+											   		   (base_price_child + taxes_child).toFixed(2))
+		}
+		hotel_report += "</br>"
     } 
 	
-	var start_date = moment(hotel_data[4])
-	var end_date = moment(hotel_data[5])
-	var number_of_nights = end_date.diff(start_date, 'days');
-	
-	//formatting
-	var base_price = parseFloat(hotel_data[1])
-	var taxes = parseFloat(document.getElementById("taxes").value)
-
-	hotel_report = templates.hotel.format(hotel_data[0], NO_ADULTS, base_price.toFixed(2), taxes.toFixed(2), (base_price + taxes).toFixed(2))
-
 	return hotel_report
 }
