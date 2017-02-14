@@ -118,7 +118,7 @@ var NO_ADULTS = 0;
 var IATA_MAP = {}
 
 function loadIATAmap(){
-	$.getJSON("../data/airport.json", function(json) {
+	$.getJSON("data/airport.json", function(json) {
     	console.log(json); 
     	IATA_MAP = json
 	});

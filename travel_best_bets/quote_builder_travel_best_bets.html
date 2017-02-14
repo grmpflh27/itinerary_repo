@@ -43,11 +43,9 @@ Paste flight here: <textarea rows=10 cols=50 id="flight_conv"></textarea></br>
 	addHotel('dynamicArea');
 	updateDates();
 	checkKids();
-
-	document.onload = function(){
-		loadIATAmap()
-	}
+	window.onload = loadIATAmap;
 </script>
+
 <input type="button" value="Add hotel" onClick="addHotel('dynamicArea');"></br>
 <input type="button" value="Add flight" onClick="addFlight('dynamicArea');"></br>
 <!--
