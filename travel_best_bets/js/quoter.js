@@ -1,24 +1,36 @@
+// TODO
+
+/*
+ * REVNET support
+ * fix hotel pricing (adult)
+ * "round trip <from> ... <to> ...
+ * child pricing
+ * family totals
+ */
+
 /*
  * settings
  */
 
 const settings = {
 	DateFormat : "MMMM Do, YYYY",
-	ValidSizeForFlight : 10,
+	ValidSizeForIntAIR : 10,
+	ValidMinSizeForRevnet : 8,
+	IATA_path : "https://grmpflh27.github.io/quoter/data/airport.json"
 }
 
 const templates = {
 	greeting : "Hello {0},</br></br>Thanks for your message, I'd be happy to help you book this trip!</br></br>",
 	package_overview: `Our {0} includes: \
 						<ul><li>round trip flights from {1} to {2}</li>\
-		    				<li>{3} accommodation{4} in {5}</li>\
+		    				<li>{3} night{4} accommodation{4} in {5}</li>\
 		    				<li>round trip transfers between airport and hotel</li></ul></br>`,
 	flight : "Depart: {0} at {1}{2}, Arrive {3} at {4}{5}</br>",
 	hotel : `On these dates, {0}. The total price per person would be:</br>
 			 Adult ({1}): \${2} + \${3} taxes and fees = \${4}</br>`,
 	hotel_kid : "Children ({1}): \${2} + \${3} taxes and fees = \${4}</br>",
 	ending : "Let me know what you think of these, and I'm happy to look up some more options. Thanks!",
-	overnight_str : " (+{0}) "
+	overnight_str : " (+{0})"
 }
 
 //////////////
@@ -116,18 +128,12 @@ var ORIGIN_CITY = "";
 var DEST_CITY = "";
 var NO_ADULTS = 0;
 var IATA_MAP = {}
-
-function loadIATAmap(){
-	$.getJSON("data/airport.json", function(json) {
-    	console.log(json); 
-    	IATA_MAP = json
-	});
-}
+var IATA_LOADED = false
 
 function updateDates(){
 	var night_switch = document.getElementById("nights");
 	var ddate = document.getElementById("ddate");
- 	ddate.onchange = function(){
+ 	/*ddate.onchange = function(){
  		adate = document.getElementById("adate");
 		adate.value = ddate.value;
 		var rddate = document.getElementById("rddate");
@@ -135,7 +141,7 @@ function updateDates(){
 		rddate.value = tmp.format("YYYY-MM-DD")
 		radate = document.getElementById("radate");
 		radate.value = rddate.value
-	};
+	};*/
 
  	night_switch.onchange = function(){
  		dst_obj = document.getElementById("adate");
@@ -146,6 +152,24 @@ function updateDates(){
 		ret_arr_obj = document.getElementById("radate");
 		ret_arr_obj.value = ret_dep_obj.value
 	};
+
+	var flight_conv = document.getElementById("flight_conv")
+	if (flight_conv.addEventListener) {
+  		flight_conv.addEventListener('input', function() {
+			if (!IATA_LOADED){
+				loadIATAmap()
+				IATA_LOADED = true
+			}
+  		}, false);
+	};
+}
+
+
+function loadIATAmap(){
+	$.getJSON(settings.IATA_path, function(json) {
+		console.log("Loaded json.")
+    	IATA_MAP = json
+	});
 }
 
 function checkKids(){
@@ -378,7 +402,7 @@ function getHotelHTML(){
  * report generation
  */
 
- function parseTemplate(){
+ function parseIntAIRTemplate(){
 
  	var flight_conv = document.getElementById("flight_conv").value.split('\n')
  	var cur_year = moment().year()
@@ -397,14 +421,68 @@ function getHotelHTML(){
 		}
 
  		//parse it out
- 		if (cur.length == settings.ValidSizeForFlight){
+ 		if (cur.length == settings.ValidSizeForIntAIR){
  			flight_parse_obj = {
- 				orig : cur[4],
- 				dest : cur[5],
+ 				orig : "{0}, {1}".format(IATA_MAP[cur[4]].city, IATA_MAP[cur[4]].county),
+ 				dest : "{0}, {1}".format(IATA_MAP[cur[5]].city, IATA_MAP[cur[5]].county),
  				ddate : moment(cur[3].concat(cur_year)).format(settings.DateFormat),
- 				dtime : formatTime(cur[6]),
+ 				dtime : formatTime(cur[5]),
  				adate : moment(cur[8].concat(cur_year)).format(settings.DateFormat),
  				atime : formatTime(cur[7])
+ 			}
+
+ 			if (inbound){
+ 				inbound_group.push(flight_parse_obj)
+	 		}
+	 		else{
+	 			outbound_group.push(flight_parse_obj)
+	 		}
+ 		}
+ 		
+ 	}
+
+ 	//generate flight reports:
+ 	flight_report = ""
+ 	if (outbound_group.length){
+ 		flight_report += generateFlightReportFromTemplate(outbound_group)
+ 	}
+ 	if (inbound_group.length){
+ 		flight_report += generateFlightReportFromTemplate(inbound_group)
+ 	}
+	return flight_report
+ }
+
+ function parseRevnetTemplate(){
+ 	var flight_conv = document.getElementById("flight_conv").value.split('\n')
+ 	var inbound = false
+ 	var outbound_group = []
+ 	var inbound_group = []
+
+ 	var INBOUND = "RET:"; var OUTBOUND = "DEP:"
+ 	for (var i = 0; i < flight_conv.length; i++) {
+ 		var offset = 0;
+ 		var cur = flight_conv[i].trim()
+ 		cur = cur.replace(/\s\s+/g, ' ');
+ 		cur = cur.split(' ')
+
+ 		if (cur[0] == INBOUND || cur[0] == OUTBOUND ){
+ 			offset = 1
+ 		}
+ 		
+		if (inbound == false && cur.indexOf(INBOUND) !== -1){
+			inbound = true
+		}
+
+ 		//parse it out
+ 		if (cur.length >= settings.ValidMinSizeForRevnet){
+ 
+ 			flight_parse_obj = {
+ 				orig : "{0}, {1}".format(IATA_MAP[cur[3 + offset]].city, IATA_MAP[cur[3 + offset]].county),
+ 				dest : "{0}, {1}".format(IATA_MAP[cur[5 + offset]].city, IATA_MAP[cur[5 + offset]].county),
+ 				ddate : moment(cur[2 + offset]).format(settings.DateFormat),
+ 				dtime : formatTime(cur[4 + offset]),
+ 				adate : moment(cur[2 + offset]).format(settings.DateFormat),
+ 				atime : formatTime(cur[6 + offset])
  			}
 
  			if (inbound){
@@ -460,8 +538,15 @@ function generateReport(){
 	//flight report from template
 	var right_order_txt;
 
-	if (document.getElementById("flight_conv").value){
-		right_order_txt = parseTemplate();
+	var template_f = document.getElementById("flight_conv").value
+	if (template_f){
+		if (!template_f.startsWith("DEP")){
+			right_order_txt = parseIntAIRTemplate();
+		}
+		else{
+			right_order_txt = parseRevnetTemplate();
+		}
+		
 	}
 
 	// init
