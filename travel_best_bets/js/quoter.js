@@ -475,13 +475,19 @@ function getHotelHTML(){
 
  		//parse it out
  		if (cur.length >= settings.ValidMinSizeForRevnet){
- 
+
+ 			// NOTE: we are assuming if the landing time is > than the departing time that the flight was overnight
+ 			// this means that weird date-line traversals are not caught
+ 			var flight_over_night = moment(cur[4 + offset], "HH:mm") > moment(cur[6 + offset], "HH:mm")
+ 			var ref_time = moment(cur[2 + offset])
+
+
  			flight_parse_obj = {
  				orig : "{0}, {1}".format(IATA_MAP[cur[3 + offset]].city, IATA_MAP[cur[3 + offset]].county),
  				dest : "{0}, {1}".format(IATA_MAP[cur[5 + offset]].city, IATA_MAP[cur[5 + offset]].county),
- 				ddate : moment(cur[2 + offset]).format(settings.DateFormat),
+ 				ddate : ref_time.format(settings.DateFormat),
  				dtime : formatTime(cur[4 + offset]),
- 				adate : moment(cur[2 + offset]).format(settings.DateFormat),
+ 				adate : ref_time.add(+flight_over_night, 'days').format(settings.DateFormat),
  				atime : formatTime(cur[6 + offset])
  			}
 
