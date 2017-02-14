@@ -29,6 +29,7 @@
 Customer name: <input type="text" id="customer_name" size=50 onFocus="this.select()"><br/>
 Package name: <input type="text" id="package" size=50><br/>
 Number of adults: <input type="number" min="1" max="100" step="1" value="2" id="adults"></br>
+Number of children: <input type="number" min="0" max="100" step="1" value="0" id="children"></br>
 Number of nights: <input type="number" min="1" max="100" step="1" value="4" id="nights"></br>
 Accomodation description: <textarea rows=4 cols=50 id="acco_desc"></textarea></br>
 Paste flight here: <textarea rows=10 cols=50 id="flight_conv"></textarea></br>
@@ -41,14 +42,15 @@ Paste flight here: <textarea rows=10 cols=50 id="flight_conv"></textarea></br>
 	//addFlight('dynamicArea');
 	addHotel('dynamicArea');
 	updateDates();
+	checkKids();
 
 	document.onload = function(){
 		loadIATAmap()
 	}
 </script>
 <input type="button" value="Add hotel" onClick="addHotel('dynamicArea');"></br>
-<!--
 <input type="button" value="Add flight" onClick="addFlight('dynamicArea');"></br>
+<!--
 <input type="button" value="Add ground transportation" onClick="addGroundT('dynamicArea');"></br>
 <input type="button" value="Add car rental" onClick="addCarRental('dynamicArea');"></br>
 -->

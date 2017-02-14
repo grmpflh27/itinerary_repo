@@ -15,8 +15,8 @@ const templates = {
 		    				<li>round trip transfers between airport and hotel</li></ul></br>`,
 	flight : "Depart: {0} at {1}{2}, Arrive {3} at {4}{5}</br>",
 	hotel : `On these dates, {0}. The total price per person would be:</br>
-					Adult ({1}): \${2} + 
-					\${3} taxes and fees = \${4}</br>`,
+			 Adult ({1}): \${2} + \${3} taxes and fees = \${4}</br>`,
+	hotel_kid : "Children ({1}): \${2} + \${3} taxes and fees = \${4}</br>",
 	ending : "Let me know what you think of these, and I'm happy to look up some more options. Thanks!",
 	overnight_str : " (+{0}) "
 }
@@ -146,6 +146,24 @@ function updateDates(){
 		ret_arr_obj = document.getElementById("radate");
 		ret_arr_obj.value = ret_dep_obj.value
 	};
+}
+
+function checkKids(){
+	var kids = document.getElementById("children")
+	kids.onchange = function(){
+		kid_elements = document.getElementsByClassName("kid_class")
+		console.log("!!! {0}".format(kid_elements.length))
+		if(kids.value){
+			for(var i; i < kid_elements.length; i++){
+				kid_elements[i].style.visibility = "visible"
+			}
+		}
+		else{
+			for(var i; i < kid_elements.length; i++){
+				kid_elements[i].style.visibility = "hidden"
+			}
+		}
+	}
 }
 
 function sortGroupByCategory(group){
@@ -296,6 +314,10 @@ function getFlightHTML(){
 				<td>Arrival time:</td>
 				<td><input type="time" step="300" id="ratime" value={2}></td>
 			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td><input type="button" value="Remove flight" onClick="removeElement(document.getElementById('div_flight_{0}').id, 'flight')"</td>
+			</tr>
 		</table>
 	</fieldset>
 	`.format(flight_counter, moment().format("YYYY-MM-DD"), "12:00", moment().add(NO_OF_NIGHTS, 'days').format("YYYY-MM-DD"))
@@ -318,19 +340,27 @@ function addHotel(divName){
 function getHotelHTML(){	
 	var hotel_str = `<div id="div_hotel_{0}">
 	<fieldset>
-    <legend>Hotel {0}</legend>
+    <legend>Hotel Option {0}</legend>
 		<table border=0 id="hotel_{0}">
 			<tr>
+				<td>Base price (adult):</td>
+				<td><input type="text" size=32></td>
+			</tr>
+			<tr>
+				<td>Taxes and fees (adult):</td>
+				<td><input type="text" id="taxes" size=32></td>
+			</tr>
+			<tr class="kid_class">
+				<td>Base price (child):</td>
+				<td><input type="text" size=32></td>
+			</tr>
+			<tr class="kid_class">
+				<td>Taxes and fees (child):</td>
+				<td><input type="text" id="taxes_kid" size=32></td>
+			</tr>
+			<tr>
 				<td>Hotel description:</td>
-				<td><input type="text"></td>
-			</tr>
-			<tr>
-				<td>Base price:</td>
-				<td><input type="text"></td>
-			</tr>
-			<tr>
-				<td>Taxes and fees:</td>
-				<td><input type="text" id="taxes"></td>
+				<td><textarea rows=4 cols=30></textarea></td>
 			</tr>
 			<tr>
 				<td>&nbsp;</td>
@@ -390,24 +420,24 @@ function getHotelHTML(){
  	//generate flight reports:
  	flight_report = ""
  	if (outbound_group.length){
- 		flight_report += generateParsedFlightReport(outbound_group)
+ 		flight_report += generateFlightReportFromTemplate(outbound_group)
  	}
  	if (inbound_group.length){
- 		flight_report += generateParsedFlightReport(inbound_group)
+ 		flight_report += generateFlightReportFromTemplate(inbound_group)
  	}
 	return flight_report
  }
 
- function generateParsedFlightReport(out_flight){
+ function generateFlightReportFromTemplate(flight_items){
 
  	var flight_str = ""
  	var over_night = ""
  	var dep_over_night = ""
- 	var start_date = moment(out_flight[0].ddate, settings.DateFormat)
- 	flight_str += "{0}</br>".format(out_flight[0].ddate)
+ 	var start_date = moment(flight_items[0].ddate, settings.DateFormat)
+ 	flight_str += "{0}</br>".format(flight_items[0].ddate)
 
- 	for (var i = 0; i < out_flight.length; i++) {
- 		var cur = out_flight[i]
+ 	for (var i = 0; i < flight_items.length; i++) {
+ 		var cur = flight_items[i]
 		var diff_days = daysBetween(start_date, moment(cur.adate, settings.DateFormat))
 		if(diff_days){
 			over_night = templates.overnight_str.format(diff_days);
@@ -428,10 +458,7 @@ function getHotelHTML(){
 function generateReport(){
 
 	//flight report from template
-
-
 	var right_order_txt;
-
 
 	if (document.getElementById("flight_conv").value){
 		right_order_txt = parseTemplate();
@@ -545,18 +572,18 @@ function reportFlight(flight_node){
 	var start_date = moment(flight_data[1])
 	var end_date = moment(flight_data[4])
 	var over_night = ""
-	diff_days = end_date.diff(start_date, 'days');
+	var diff_days = daysBetween(start_date, end_date);
 	if(diff_days){
-		over_night = " (+{0}) ".format(diff_days);
+		over_night = templates.overnight_str.format(diff_days);
 	}
 
 	//return
 	var ret_start_date = moment(flight_data[6])
 	var ret_end_date = moment(flight_data[8])
 	var ret_over_night = ""
-	diff_days = ret_end_date.diff(ret_start_date, 'days');
+	diff_days = daysBetween(ret_start_date, ret_end_date)
 	if(diff_days){
-		ret_over_night = " (+{0}) ".format(diff_days);
+		ret_over_night = templates.overnight_str.format(diff_days);
 	}
 	
 	//formatting
@@ -571,7 +598,6 @@ function reportFlight(flight_node){
 
 	ORIGIN_CITY = flight_data[0];
 	DEST_CITY = flight_data[3];
-
 	return flight_report;
 }
 
