@@ -346,8 +346,8 @@ function getHotelHTML(){
  		//parse it out
  		if (cur.length == settings.ValidSizeForIntAIR){
  			flight_parse_obj = {
- 				orig : "{0}, {1}".format(IATA_MAP[cur[4]].city, IATA_MAP[cur[4]].county),
- 				dest : "{0}, {1}".format(IATA_MAP[cur[5]].city, IATA_MAP[cur[5]].county),
+ 				orig : IATA_MAP[cur[4]].city,
+ 				dest : IATA_MAP[cur[5]].city,
  				ddate : moment(cur[3].concat(cur_year)).format(settings.DateFormat),
  				dtime : formatTime(cur[6]),
  				adate : moment(cur[8].concat(cur_year)).format(settings.DateFormat),
@@ -398,8 +398,8 @@ function getHotelHTML(){
  			var ref_time = moment(cur[2 + offset])
 
  			flight_parse_obj = {
- 				orig : "{0}, {1}".format(IATA_MAP[cur[3 + offset]].city, IATA_MAP[cur[3 + offset]].county),
- 				dest : "{0}, {1}".format(IATA_MAP[cur[5 + offset]].city, IATA_MAP[cur[5 + offset]].county),
+ 				orig : IATA_MAP[cur[3 + offset]].city,
+ 				dest : IATA_MAP[cur[5 + offset]].city,
  				ddate : ref_time.format(settings.DateFormat),
  				dtime : formatTime(cur[4 + offset]),
  				adate : ref_time.add(+flight_over_night, 'days').format(settings.DateFormat),
