@@ -336,7 +336,7 @@ function getHotelHTML(){
  	for (var i = 0; i < flight_conv.length; i++) {
 
  		var cur = flight_conv[i].trim()
- 		cur = cur.replace(/\s+/g, ' '));
+ 		cur = cur.replace(/\s+/g, ' ');
  		cur = cur.split(' ')
  		
 		if (inbound == false && cur.indexOf(INBOUND) !== -1){
