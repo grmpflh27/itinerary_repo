@@ -23,9 +23,9 @@ const templates = {
 		    				<li>round trip transfers between airport and hotel</li></ul></br>`,
 	flight : "Depart: {0} at {1}{2}, Arrive {3} at {4}{5}</br>",
 	hotel_adult : `{0}</br>
-			 Adult ({1}): \${2} + \${3} taxes and fees = \${4}</br>`,
-	hotel_kid : "Children ({0}): \${1} + \${2} taxes and fees = \${3}</br>",
-	hotel_total : "Total cost: \${0}</br>",
+			 Adult ({1}): \${2} + \${3} taxes and fees = \${4} CAD per person</br>`,
+	hotel_kid : "Children ({0}): \${1} + \${2} taxes and fees = \${3} CAD per person</br>",
+	hotel_total : "Family total: \${0} CAD total</br>",
 	ending : "Let me know what you think of these, and I'm happy to look up some more options. Thanks!",
 	overnight_str : " (+{0})"
 }
